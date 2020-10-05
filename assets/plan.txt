@@ -1,0 +1,16 @@
+XXAAAAXXXXBBBBXX
+XX....XXXX....XX
+XX....XXXX....XX
+XX....XXXX....XX
+XX....XXXX....XX
+XXX....XX....XXX
+XXXX........XXXX
+XXXXX......XXXXX
+XXXXX......XXXXX
+XXXX........XXXX
+XXX....XX....XXX
+XX....XXXX....XX
+XX....XXXX....XX
+XX....XXXX....XX
+XX....XXXX....XX
+XX.aa.XXXX.bb.XX
