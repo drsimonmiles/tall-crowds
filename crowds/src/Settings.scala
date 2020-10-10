@@ -4,7 +4,7 @@ object Settings {
   val cellSize = 31
   val cellMiddle = 15
 
-  val defaultArrivalChance = 0.05
+  val defaultArrivalChance = 0.03
   val stepSpeed = Seconds (0.03)
 
   val bodyRadius = 12

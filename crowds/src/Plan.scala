@@ -1,10 +1,11 @@
 import CollectionUtils._
+import Direction._
 import PathSearch.aStarSearch
 import Position._
 import Wall.wallAtRelativePoint
 import indigo.Point
 
-case class Plan (width: Int, height: Int, grid: List[List[Option[WallAngle]]], routes: List[Route]) {
+case class Plan (width: Int, height: Int, grid: List[List[Option[WallAngle]]]) {
   def wallAt (position: GridPosition): Option[WallAngle] =
     if (!inRange (position)) None else grid (position.x)(position.y)
 
@@ -22,13 +23,21 @@ case class Plan (width: Int, height: Int, grid: List[List[Option[WallAngle]]], r
     adjacent (point).filter (point => pointInRange (point) && !wallAtPoint (point))
 
   def accessibleAdjacentsWithRadius (point: Point, radius: Int): Set[Point] =
-    adjacent (point).filter (point => pointInRange (point) && !onRadiusAround (point, radius).exists (wallAtPoint))
+    adjacent (point).filter (moved => pointInRange (moved) && !onRadiusAround (moved, radius).exists (wallAtPoint))
+
+  def accessibleDirectionsWithRadius (point: Point, radius: Int): Set[Direction] =
+    directions.filter { direction =>
+      val moved = moveBy (point, direction)
+      pointInRange (moved) && !onRadiusAround (moved, radius).exists (wallAtPoint)
+    }
 }
+
+case class Scenario (plan: Plan, routes: List[Route])
 
 object Plan {
   val routeMarkers: List[(Char, Char)] = List (('a', 'A'), ('b', 'B'), ('c', 'C'), ('d', 'D'))
 
-  def loadPlan (code: String): Plan = {
+  def loadScenario (code: String): Scenario = {
     val rows = code.split ("\n").filter (_.nonEmpty).toList.map (_.toList).transpose
     val width = rows.head.size
     val height = rows.size
@@ -45,11 +54,11 @@ object Plan {
         else
           None
     }
-    Plan (width, height, wallAngles (width, height, walls), routes)
+    Scenario (Plan (width, height, wallAngles (width, height, walls)), routes)
   }
 
 
-  def wallAngles (width: Int, height: Int, walls: List[List[Boolean]]): List[List[Option[WallAngle]]] =
+  private def wallAngles (width: Int, height: Int, walls: List[List[Boolean]]): List[List[Option[WallAngle]]] =
     (0 until width).toList.map (x =>
       (0 until height).toList.map (y =>
         wallAt (x, y, walls)))
@@ -58,10 +67,10 @@ object Plan {
     if (position.x < 0 || position.x >= plan.width || position.y < 0 || position.y >= plan.height) true
     else plan.grid (position.x)(position.y).isDefined
 
-  def hasWall (x: Int, y: Int, walls: List[List[Boolean]]): Boolean =
+  private def hasWall (x: Int, y: Int, walls: List[List[Boolean]]): Boolean =
     if (x < 0 || x >= walls.size || y < 0 || y >= walls.head.size) true else walls (x)(y)
 
-  def wallAt (x: Int, y: Int, walls: List[List[Boolean]]): Option[WallAngle] =
+  private def wallAt (x: Int, y: Int, walls: List[List[Boolean]]): Option[WallAngle] =
     if (!hasWall (x, y, walls)) None
     else
       (hasWall (x - 1, y, walls), hasWall (x, y - 1, walls), hasWall (x + 1, y, walls), hasWall (x, y + 1, walls)) match {

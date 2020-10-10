@@ -1,4 +1,5 @@
 import CollectionUtils.choose
+import Direction._
 import Force._
 import HeightDistribution.chooseHeight
 import Personality.personalities
@@ -22,15 +23,15 @@ object Walker {
       choose (personalities, dice), chooseHeight (dice), Nil)
 
   def inTightSpace (walker: Walker, other: Walker): Boolean =
-    walker.position.distanceTo (other.position) < tightRadius
+    walker.position.distanceTo (other.position) < tightRadius + bodyRadius
 
   def inLooseSpace (walker: Walker, other: Walker): Boolean =
-    walker.position.distanceTo (other.position) < looseRadius
+    walker.position.distanceTo (other.position) < looseRadius + bodyRadius
 
-  def walkerAvoidanceDirections (walker: Walker, others: List[Walker]): Set[(Int, Int)] =
+  def walkerAvoidanceDirections (walker: Walker, others: List[Walker]): Set[Direction] =
     others.foldLeft (directions) { case (remaining, other) =>
       if (inLooseSpace (walker, other))
-        remaining.intersect (directionsNotTowards (direction (walker.position, other.position)))
+        remaining.intersect (directionBetween (walker.position, other.position).map (_.notTowards).getOrElse (directions))
       else remaining
     }
 
@@ -51,6 +52,6 @@ object Walker {
     ).toList
 
   def wiggleForce (dice: Dice): Force =
-    Force (choose (directions.toList, dice), wiggleWeight)
+    Force (choose (directions.toList, dice).toTuple, wiggleWeight)
 }
 

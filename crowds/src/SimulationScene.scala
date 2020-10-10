@@ -17,8 +17,8 @@ object SimulationScene extends Scene[ReferenceData, Model, ViewModel] {
   def updateModel (context: FrameContext[ReferenceData], model: Model): GlobalEvent => Outcome[Model] = {
     case FrameTick =>
       if (context.gameTime.running > model.lastStep + stepSpeed)
-        Outcome (addWalkers (moveWalkers2 (model, context.startUpData.plan, context.dice),
-          context.startUpData.plan, context.dice).copy (lastStep = context.gameTime.running))
+        Outcome (addWalkers (moveWalkers2 (model, context.startUpData.scenario.plan, context.dice),
+          context.startUpData.scenario, context.dice).copy (lastStep = context.gameTime.running))
       else
         Outcome (model)
     case _ => Outcome (model)

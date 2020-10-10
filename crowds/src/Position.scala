@@ -1,3 +1,4 @@
+import Direction._
 import Settings._
 import indigo.Point
 
@@ -7,16 +8,17 @@ case class GridPosition (x: Int, y: Int) {
   def moveBy (dx: Int, dy: Int): GridPosition =
     GridPosition (x + dx, y + dy)
 
+  def moveBy (direction: Direction): GridPosition =
+    moveBy (direction.dx, direction.dy)
+
   def distanceTo (otherPosition: GridPosition): Double =
     Math.sqrt ((x - otherPosition.x) * (x - otherPosition.x) + (y - otherPosition.y) * (y - otherPosition.y))
 
   def adjacent: Set[GridPosition] =
-    Position.directions.map (coords => moveBy (coords._1, coords._2))
+    directions.map (direction => moveBy (direction))
 }
 
 object Position {
-  val directions = Set ((0, -1), (1, -1), (1, 0), (1, 1), (0, 1), (-1, 1), (-1, 0), (-1, -1))
-
   def gridPositionToTopLeftPoint (gridPosition: GridPosition): Point =
     Point (gridPosition.x * cellSize, gridPosition.y * cellSize)
 
@@ -34,28 +36,14 @@ object Position {
   def moveBy (point: Point, dx: Int, dy: Int): Point =
     Point (point.x + dx, point.y + dy)
 
+  def moveBy (point: Point, direction: Direction): Point =
+    Point (point.x + direction.dx, point.y + direction.dy)
+
+  def moveTowards (point: Point, towards: Point): Point =
+    directionBetween (point, towards).map (moveBy (point, _)).getOrElse (point)
+
   def adjacent (point: Point): Set[Point] =
-    directions.map (coords => moveBy (point, coords._1, coords._2))
-
-  def direction (from: Point, to: Point): (Int, Int) = {
-    val dx = to.x - from.x
-    val dy = to.y - from.y
-    val scale = Math.sqrt (dx * dx + dy * dy).toFloat
-    val unitdx = dx / scale
-    val unitdy = dy / scale
-    (Math.round (unitdx), Math.round (unitdy))
-  }
-
-  def directionsNotAway (direction: (Int, Int)): Set[(Int, Int)] = {
-    val oppositeX = if (direction._1 == 0) None else Some (-direction._1)
-    val oppositeY = if (direction._2 == 0) None else Some (-direction._2)
-    directions.filter (d =>
-      (!oppositeX.contains (d._1) || d._2 == direction._2) &&
-        (!oppositeY.contains (d._2) || d._1 == direction._1))
-  }
-
-  def directionsNotTowards (direction: (Int, Int)): Set[(Int, Int)] =
-    directionsNotAway ((-direction._1, -direction._2))
+    directions.map (direction => moveBy (point, direction))
 
   /** Determines the pixel points in a circle of a given radius around a given point
    * using Bresenham’s circle drawing algorithm */

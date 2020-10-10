@@ -1,5 +1,5 @@
 import Assets.planSpecs
-import Plan.loadPlan
+import Plan.loadScenario
 import Settings.defaultArrivalChance
 import indigo._
 import indigo.scenes.{Scene, SceneName}
@@ -34,8 +34,8 @@ object TallCrowds extends IndigoGame[GameViewport, ReferenceData, Model, ViewMod
   def setup (bootData: GameViewport,
              assetCollection: AssetCollection,
              dice: Dice): Startup[ReferenceData] =
-    assetCollection.findTextDataByName (planSpecs).map (loadPlan)
-      .map (plan => Startup.Success (ReferenceData (plan)))
+    assetCollection.findTextDataByName (planSpecs).map (loadScenario)
+      .map (scenario => Startup.Success (ReferenceData (scenario)))
       .getOrElse (Startup.Failure ("Could not load plan"))
 
   def initialViewModel(startupData: ReferenceData, model: Model): ViewModel =
