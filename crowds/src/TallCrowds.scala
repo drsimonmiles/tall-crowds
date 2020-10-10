@@ -9,7 +9,7 @@ import scala.scalajs.js.annotation.JSExportTopLevel
 @JSExportTopLevel("IndigoGame")
 object TallCrowds extends IndigoGame[GameViewport, ReferenceData, Model, ViewModel] {
   def initialModel (startupData: ReferenceData): Model =
-    Model (List.empty, defaultArrivalChance, Seconds (0))
+    Model (None, List.empty, defaultArrivalChance, Seconds (0))
 
   def boot(flags: Map[String, String]): BootResult[GameViewport] = {
     val assetPath: String = flags.getOrElse ("baseUrl", "")
@@ -26,17 +26,17 @@ object TallCrowds extends IndigoGame[GameViewport, ReferenceData, Model, ViewMod
 
   /** Three scenes: start screen, levels choice, game play screen */
   def scenes (bootData: GameViewport): NonEmptyList[Scene[ReferenceData, Model, ViewModel]] =
-    NonEmptyList (SimulationScene)
+    NonEmptyList (PrepareScene, SimulationScene)
 
   def initialScene (bootData: GameViewport): Option[SceneName] =
-    Some (SimulationScene.name)
+    Some (PrepareScene.name)
 
   def setup (bootData: GameViewport,
              assetCollection: AssetCollection,
              dice: Dice): Startup[ReferenceData] =
-    assetCollection.findTextDataByName (planSpecs).map (loadScenario)
-      .map (scenario => Startup.Success (ReferenceData (scenario)))
-      .getOrElse (Startup.Failure ("Could not load plan"))
+    assetCollection.findTextDataByName (planSpecs)
+      .map (specs => Startup.Success (ReferenceData (specs)))
+      .getOrElse (Startup.Failure ("Could not load scenario specs"))
 
   def initialViewModel(startupData: ReferenceData, model: Model): ViewModel =
     ViewModel ()

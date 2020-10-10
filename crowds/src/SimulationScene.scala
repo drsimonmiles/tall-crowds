@@ -17,20 +17,30 @@ object SimulationScene extends Scene[ReferenceData, Model, ViewModel] {
   def updateModel (context: FrameContext[ReferenceData], model: Model): GlobalEvent => Outcome[Model] = {
     case FrameTick =>
       if (context.gameTime.running > model.lastStep + stepSpeed)
-        Outcome (addWalkers (moveWalkers2 (model, context.startUpData.scenario.plan, context.dice),
-          context.startUpData.scenario, context.dice).copy (lastStep = context.gameTime.running))
-      else
-        Outcome (model)
+        model.scenario match {
+          case Some (loadedScenario) =>
+            Outcome (addWalkers (moveWalkers2 (model, loadedScenario.plan, context.dice),
+              loadedScenario, context.dice).copy (lastStep = context.gameTime.running))
+          case None =>
+            Outcome (model)
+        }
+      else Outcome (model)
     case _ => Outcome (model)
   }
 
   def updateViewModel (context: FrameContext[ReferenceData], model: Model, viewModel: ViewModel): GlobalEvent => Outcome[ViewModel] =
     _ => Outcome (viewModel)
 
-  def present (context: FrameContext[ReferenceData], model: Model, viewModel: ViewModel): SceneUpdateFragment =
-    SceneUpdateFragment.empty
-      .addGameLayerNodes (context.startUpData.wallGraphics)
-      .addGameLayerNodes (walkerGraphics (model))
+  def present (context: FrameContext[ReferenceData], model: Model, viewModel: ViewModel): SceneUpdateFragment = {
+    model.scenario match {
+      case Some (loadedScenario) =>
+        SceneUpdateFragment.empty
+          .addGameLayerNodes (loadedScenario.plan.wallGraphics)
+          .addGameLayerNodes (walkerGraphics (model))
+      case None =>
+        SceneUpdateFragment.empty
+    }
+  }
 
   def walkerGraphics (model: Model): Group =
     Group (model.walkers.flatMap (walker =>

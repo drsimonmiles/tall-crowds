@@ -1,11 +1,18 @@
+import Assets.wallGraphic
 import CollectionUtils._
 import Direction._
 import PathSearch.aStarSearch
 import Position._
+import Settings._
 import Wall.wallAtRelativePoint
-import indigo.Point
+import indigo.{Group, Point}
 
 case class Plan (width: Int, height: Int, grid: List[List[Option[WallAngle]]]) {
+  val wallGraphics: Group = Group (
+    (0 until width).toList.flatMap (x =>
+      (0 until height).toList.flatMap (y =>
+        grid (x)(y).map (wallGraphic).map (_.moveTo (x * cellSize, y * cellSize)))))
+
   def wallAt (position: GridPosition): Option[WallAngle] =
     if (!inRange (position)) None else grid (position.x)(position.y)
 

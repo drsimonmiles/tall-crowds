@@ -25,4 +25,7 @@ object Settings {
   val viewportWidth = cellSize * 16
   val viewportHeight = cellSize * 16
   val magnificationLevel = 1
+
+  val horizontalCentre = viewportWidth / 2
+  val verticalMiddle = viewportHeight / 2
 }

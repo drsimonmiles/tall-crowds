@@ -3,7 +3,7 @@ import indigo._
 
 object Assets {
   val imageFiles  = Set[String] (
-    "circle", "slider-end", "slider-mid", "slider-pointer", "walker", "wall")
+    "boxy_font_small", "circle", "slider-end", "slider-mid", "slider-pointer", "walker", "wall")
   val buttonFiles = Set[String] ()
   val textFiles   = Set[String] ("plan")
   val jsonFiles   = Set[String] ()

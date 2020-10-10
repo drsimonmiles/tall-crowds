@@ -1,15 +1,21 @@
+import Assets.planSpecs
 import CollectionUtils._
 import Direction._
 import Force._
+import Plan.loadScenario
 import Position._
 import Route._
 import Settings._
 import Walker._
 import indigo._
 
-case class Model (walkers: List[Walker], stepArrivalChancePerRoute: Double, lastStep: Seconds)
+case class Model (scenario: Option[Scenario], walkers: List[Walker],
+                  stepArrivalChancePerRoute: Double, lastStep: Seconds)
 
 object Model {
+  def addScenario (model: Model, specs: String): Model =
+    model.copy (scenario = Some (loadScenario (specs)))
+
   def addWalkers (model: Model, scenario: Scenario, dice: Dice): Model =
     //if (model.walkers.size >= 1) model else
     model.copy (
@@ -17,7 +23,7 @@ object Model {
         scenario.routes.flatMap (route =>
           if (dice.rollDouble < model.stepArrivalChancePerRoute)
             Some (createWalker (route, dice)).filterNot ( newWalker =>
-              model.walkers.exists (existing => inTightSpace (newWalker, existing)))
+              model.walkers.exists (existing => inLooseSpace (newWalker, existing)))
           else
             None
         ))

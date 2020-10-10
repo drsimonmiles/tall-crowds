@@ -1,4 +1,3 @@
-import Plan.hasWall
 import scala.annotation.tailrec
 
 object PathSearch {
