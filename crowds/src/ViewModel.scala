@@ -1,1 +1,1 @@
-case class ViewModel ()
+case class ViewModel (progressBar: ProgressBar)

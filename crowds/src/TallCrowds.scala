@@ -1,16 +1,12 @@
-import Assets.planSpecs
-import Plan.loadScenario
-import Settings.defaultArrivalChance
+import scala.scalajs.js.annotation.JSExportTopLevel
+import Assets.{planSpecs, progressBar, progressBase}
+import Scenario.{loadScenario, pathComputations}
+import Settings.{defaultArrivalChance, progressBarPosition, progressBasePosition}
 import indigo._
 import indigo.scenes.{Scene, SceneName}
 
-import scala.scalajs.js.annotation.JSExportTopLevel
-
 @JSExportTopLevel("IndigoGame")
 object TallCrowds extends IndigoGame[GameViewport, ReferenceData, Model, ViewModel] {
-  def initialModel (startupData: ReferenceData): Model =
-    Model (None, List.empty, defaultArrivalChance, Seconds (0))
-
   def boot(flags: Map[String, String]): BootResult[GameViewport] = {
     val assetPath: String = flags.getOrElse ("baseUrl", "")
     val config = GameConfig (
@@ -38,6 +34,17 @@ object TallCrowds extends IndigoGame[GameViewport, ReferenceData, Model, ViewMod
       .map (specs => Startup.Success (ReferenceData (specs)))
       .getOrElse (Startup.Failure ("Could not load scenario specs"))
 
+  def initialModel (startupData: ReferenceData): Model = {
+    val scenario = loadScenario (startupData.scenarioSpecs)
+    Model (
+      scenario = scenario,
+      pathComputations = pathComputations (scenario),
+      bestPath = Map.empty,
+      walkers = List.empty,
+      stepArrivalChancePerRoute = defaultArrivalChance,
+      lastStep = Seconds.zero)
+  }
+
   def initialViewModel(startupData: ReferenceData, model: Model): ViewModel =
-    ViewModel ()
+    ViewModel (ProgressBar (progressBasePosition, progressBarPosition, progressBase, progressBar))
 }

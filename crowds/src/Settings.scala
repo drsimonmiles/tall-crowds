@@ -1,4 +1,4 @@
-import indigo.Seconds
+import indigo._
 
 object Settings {
   val cellSize = 31
@@ -28,4 +28,7 @@ object Settings {
 
   val horizontalCentre = viewportWidth / 2
   val verticalMiddle = viewportHeight / 2
+
+  val progressBasePosition = Point (8, verticalMiddle)
+  val progressBarPosition = Point (10, verticalMiddle + 2)
 }

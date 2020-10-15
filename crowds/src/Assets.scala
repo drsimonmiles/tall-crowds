@@ -3,7 +3,8 @@ import indigo._
 
 object Assets {
   val imageFiles  = Set[String] (
-    "boxy_font_small", "circle", "slider-end", "slider-mid", "slider-pointer", "walker", "wall")
+    "boxy_font_small", "circle", "slider-end", "slider-mid", "slider-pointer", "walker", "wall",
+    "progress-base", "progress-bar")
   val buttonFiles = Set[String] ()
   val textFiles   = Set[String] ("plan")
   val jsonFiles   = Set[String] ()
@@ -29,6 +30,8 @@ object Assets {
   val looseCircle = circle.scaleBy (looseScale, looseScale)
   val walker1 = graphic ("walker", cellSize, cellSize).withRef (cellMiddle, cellMiddle)
   val walker2 = walker1.flipHorizontal (true)
+  val progressBase = graphic ("progress-base", 480, 32)
+  val progressBar = graphic ("progress-bar", 476, 28)
 
   case class GraphicSheet (asset: String) {
     val sheet = Graphic (0, 0, cellSize, cellSize, 2, materials (asset))

@@ -17,13 +17,8 @@ object SimulationScene extends Scene[ReferenceData, Model, ViewModel] {
   def updateModel (context: FrameContext[ReferenceData], model: Model): GlobalEvent => Outcome[Model] = {
     case FrameTick =>
       if (context.gameTime.running > model.lastStep + stepSpeed)
-        model.scenario match {
-          case Some (loadedScenario) =>
-            Outcome (addWalkers (moveWalkers2 (model, loadedScenario.plan, context.dice),
-              loadedScenario, context.dice).copy (lastStep = context.gameTime.running))
-          case None =>
-            Outcome (model)
-        }
+        Outcome (addWalkers (moveWalkers (model, model.scenario.plan, context.dice),
+              model.scenario, context.dice).copy (lastStep = context.gameTime.running))
       else Outcome (model)
     case _ => Outcome (model)
   }
@@ -32,14 +27,9 @@ object SimulationScene extends Scene[ReferenceData, Model, ViewModel] {
     _ => Outcome (viewModel)
 
   def present (context: FrameContext[ReferenceData], model: Model, viewModel: ViewModel): SceneUpdateFragment = {
-    model.scenario match {
-      case Some (loadedScenario) =>
-        SceneUpdateFragment.empty
-          .addGameLayerNodes (loadedScenario.plan.wallGraphics)
-          .addGameLayerNodes (walkerGraphics (model))
-      case None =>
-        SceneUpdateFragment.empty
-    }
+    SceneUpdateFragment.empty
+      .addGameLayerNodes (model.scenario.plan.wallGraphics)
+      .addGameLayerNodes (walkerGraphics (model))
   }
 
   def walkerGraphics (model: Model): Group =

@@ -1,4 +1,3 @@
-import Model._
 import Settings._
 import indigo._
 import indigo.scenes._
@@ -14,22 +13,20 @@ object PrepareScene extends Scene[ReferenceData, Model, ViewModel] {
   val subSystems: Set[SubSystem] = Set ()
 
   def updateModel (context: FrameContext[ReferenceData], model: Model): GlobalEvent => Outcome[Model] = {
-    case FrameTick if (model.scenario.isEmpty) && context.gameTime.running > Seconds(1) =>
-      Outcome (model).addGlobalEvents (PrepareEvent)
-    case PrepareEvent =>
-      Outcome (addScenario (model, context.startUpData.scenarioSpecs))
-    case FrameTick if (model.scenario.isDefined) =>
-      Outcome (model).addGlobalEvents (SceneEvent.JumpTo (SimulationScene.name))
+    case FrameTick if !model.pathComputations.isCompleted =>
+      Outcome (model.copy (pathComputations = model.pathComputations.performMore (context.gameTime)))
+    case FrameTick if model.pathComputations.isCompleted =>
+      Outcome (model.copy (bestPath = model.pathComputations.currentResult))
+        .addGlobalEvents (SceneEvent.JumpTo (SimulationScene.name))
     case _ =>
       Outcome (model)
   }
 
   def updateViewModel (context: FrameContext[ReferenceData], model: Model, viewModel: ViewModel): GlobalEvent => Outcome[ViewModel] =
-    _ => Outcome (viewModel)
+    _ => Outcome (viewModel.copy (progressBar = viewModel.progressBar.update (model.pathComputations.portionCompleted)))
 
   def present (context: FrameContext[ReferenceData], model: Model, viewModel: ViewModel): SceneUpdateFragment =
     SceneUpdateFragment.empty
-      .addUiLayerNodes (Text("P r e p a r i n g :  P l e a s e   w a i t", horizontalCentre, verticalMiddle, 1, Font.fontKey).scaleBy (2, 2).alignCenter)
+      .addUiLayerNodes (viewModel.progressBar.draw)
+      .addUiLayerNodes (Text("P r e p a r i n g :  P l e a s e   w a i t", horizontalCentre, verticalMiddle - 40, 1, Font.fontKey).scaleBy (2, 2).alignCenter)
 }
-
-object PrepareEvent extends GlobalEvent

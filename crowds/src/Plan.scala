@@ -1,13 +1,19 @@
 import Assets.wallGraphic
-import CollectionUtils._
 import Direction._
-import PathSearch.aStarSearch
 import Position._
 import Settings._
 import Wall.wallAtRelativePoint
 import indigo.{Group, Point}
 
-case class Plan (width: Int, height: Int, grid: List[List[Option[WallAngle]]]) {
+case class Plan (grid: List[List[Option[WallAngle]]]) {
+  val width: Int = grid.head.size
+  val height: Int = grid.size
+  val cells: List[GridPosition] =
+    (for (x <- 0 until width; y <- 0 until height) yield GridPosition (x, y)).toList
+
+  def hasWall (position: GridPosition): Boolean =
+    !inRange (position) || grid (position.x)(position.y).isDefined
+
   val wallGraphics: Group = Group (
     (0 until width).toList.flatMap (x =>
       (0 until height).toList.flatMap (y =>
@@ -39,40 +45,14 @@ case class Plan (width: Int, height: Int, grid: List[List[Option[WallAngle]]]) {
     }
 }
 
-case class Scenario (plan: Plan, routes: List[Route])
-
 object Plan {
-  val routeMarkers: List[(Char, Char)] = List (('a', 'A'), ('b', 'B'), ('c', 'C'), ('d', 'D'))
+  def loadPlan (rows: List[List[Char]]): Plan =
+    Plan (wallAngles (rows.map (_.map (_ == 'X'))))
 
-  def loadScenario (code: String): Scenario = {
-    val rows = code.split ("\n").filter (_.nonEmpty).toList.map (_.toList).transpose
-    val width = rows.head.size
-    val height = rows.size
-    val walls = rows.map (_.map (_ == 'X'))
-    val cells = for (x <- 0 until width; y <- 0 until height) yield GridPosition (x, y)
-    val routes = routeMarkers.flatMap {
-      case (start, end) =>
-        val startPlaces = coordinatesWhere[Char] (rows, _ == start).map (c => GridPosition (c._1, c._2))
-        val endPlaces = coordinatesWhere[Char] (rows, _ == end).map (c => GridPosition (c._1, c._2))
-        val paths = cells.map (start => start -> aStarSearch (start, endPlaces,
-          position => hasWall (position.x, position.y, walls))).toMap
-        if (startPlaces.nonEmpty && endPlaces.nonEmpty && startPlaces.forall (start => paths (start).isDefined))
-          Some (Route (startPlaces, endPlaces, paths))
-        else
-          None
-    }
-    Scenario (Plan (width, height, wallAngles (width, height, walls)), routes)
-  }
-
-
-  private def wallAngles (width: Int, height: Int, walls: List[List[Boolean]]): List[List[Option[WallAngle]]] =
-    (0 until width).toList.map (x =>
-      (0 until height).toList.map (y =>
+  private def wallAngles (walls: List[List[Boolean]]): List[List[Option[WallAngle]]] =
+    walls.head.indices.toList.map (x =>
+      walls.indices.toList.map (y =>
         wallAt (x, y, walls)))
-
-  def hasWall (position: GridPosition, plan: Plan): Boolean =
-    if (position.x < 0 || position.x >= plan.width || position.y < 0 || position.y >= plan.height) true
-    else plan.grid (position.x)(position.y).isDefined
 
   private def hasWall (x: Int, y: Int, walls: List[List[Boolean]]): Boolean =
     if (x < 0 || x >= walls.size || y < 0 || y >= walls.head.size) true else walls (x)(y)

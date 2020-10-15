@@ -1,23 +1,16 @@
-import Assets.planSpecs
-import CollectionUtils._
-import Direction._
-import Force._
-import Plan.loadScenario
-import Position._
-import Route._
-import Settings._
-import Walker._
+import CollectionUtils.choose
+import Direction.{directionBetween, directions}
+import Position.{gridPositionToMidPoint, moveBy, moveTowards, pointToGridPosition}
+import Route.{PathLookup, nextStep}
+import Settings.tightRadius
+import Walker.{createWalker, inLooseSpace, walkerAvoidanceDirections}
 import indigo._
 
-case class Model (scenario: Option[Scenario], walkers: List[Walker],
-                  stepArrivalChancePerRoute: Double, lastStep: Seconds)
+case class Model (scenario: Scenario, pathComputations: InterleavedComputation[Scenario, PathLookup],
+  bestPath: PathLookup, walkers: List[Walker], stepArrivalChancePerRoute: Double, lastStep: Seconds)
 
 object Model {
-  def addScenario (model: Model, specs: String): Model =
-    model.copy (scenario = Some (loadScenario (specs)))
-
   def addWalkers (model: Model, scenario: Scenario, dice: Dice): Model =
-    //if (model.walkers.size >= 1) model else
     model.copy (
       walkers = model.walkers ++
         scenario.routes.flatMap (route =>
@@ -32,35 +25,13 @@ object Model {
     model.copy (walkers =
       model.walkers
         .filterNot (walker => walker.route.ends.contains (pointToGridPosition (walker.position)))
-        .map { walker =>
-          nextStep (pointToGridPosition (walker.position), walker.route) match {
-            case None => walker
-            case Some (waypoint) =>
-              val forwardForce =
-                towardsForce (walker.position, gridPositionToMidPoint (waypoint), destinationWeight/* + walker.impatience*/)
-              val forces: Seq[Force] =
-                forwardForce ::
-                  wiggleForce (dice) ::
-                  interWalkerForces (walker, model.walkers.filterNot (_ == walker)) ++
-                    wallAvoidanceForces (walker, plan)
-              val direction = directionGivenForce (combineForces (forces))
-              val ensuredDirection =
-                if (direction._1 == 0 && direction._2 == 0) directionGivenForce (forwardForce)
-                else direction
-              walker.moveTo (moveBy (walker.position, ensuredDirection._1, ensuredDirection._2))
-          }})
+        .map (moveWalker (_, model, dice)))
 
-  def moveWalkers2 (model: Model, plan: Plan, dice: Dice): Model =
-    model.copy (walkers =
-      model.walkers
-        .filterNot (walker => walker.route.ends.contains (pointToGridPosition (walker.position)))
-        .map (moveWalker (_, model.walkers, plan, dice)))
-
-  def moveWalker (walker: Walker, others: List[Walker], plan: Plan, dice: Dice): Walker =
-    nextStep (pointToGridPosition (walker.position), walker.route) match {
+  def moveWalker (walker: Walker, model: Model, dice: Dice): Walker =
+    nextStep (pointToGridPosition (walker.position), walker.route, model.bestPath) match {
       case None => walker
       case Some (waypoint) =>
-        val possibilities = allowedDirections (walker, waypoint, others, plan)
+        val possibilities = allowedDirections (walker, waypoint, model.walkers, model.scenario.plan)
           .map (moveBy (walker.position, _))
         val forwardPosition = moveTowards (walker.position, gridPositionToMidPoint (waypoint))
         if (possibilities.isEmpty) walker
